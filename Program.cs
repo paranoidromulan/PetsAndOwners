@@ -1,5 +1,6 @@
 ﻿namespace PetsAndOwners;
 
+using System.Data.Common;
 using Microsoft.Data.Sqlite;
 
 class Program
@@ -33,7 +34,11 @@ class Program
             Console.WriteLine("Now provide the species of the pet:");
             string? species = Console.ReadLine();
 
-            petsAndOwnersDB.AddPet(name, species);
+            Console.WriteLine("Next, provide the name of the pet's owner (it must already exist)");
+            string? ownerName = Console.ReadLine();
+
+
+            petsAndOwnersDB.AddPet(name, species, ownerName);
         }
 
         if (input == "3")
@@ -42,6 +47,18 @@ class Program
             foreach (PetsOwners petsowners in allpets)
             {
                 Console.WriteLine($"{petsowners.petname}, {petsowners.petspecies}, {petsowners.phone}");
+            }
+        }
+        if (input == "4")
+        {
+            Console.WriteLine("Please provide the name of the pet whose owner's phone you would like to find");
+            string? petName = Console.ReadLine();
+
+            List<PetsOwners> allpets = petsAndOwnersDB.SearchPhoneByPetName(petName);
+
+            foreach (PetsOwners petsowners in allpets)
+            {
+                Console.WriteLine($"Phone number: {petsowners.phone}");
             }
         }
 

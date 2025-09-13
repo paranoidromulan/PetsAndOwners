@@ -61,24 +61,81 @@ public class PetsAndOwnersDB
             }
         }
     }
+    //Method to retrieve someones ID based on their name
 
-    public void AddPet(string name, string species)
+    public int getOwnerIdByName(string name)
     {
         using (var connection = new SqliteConnection(_connectionstring))
         {
             connection.Open();
+            var getOwnerIdCommand = connection.CreateCommand();
+            getOwnerIdCommand.CommandText = @"
+            SELECT id
+            FROM Owners
+            WHERE name = $name";
+            getOwnerIdCommand.Parameters.AddWithValue("$name", name);
+            var result = getOwnerIdCommand.ExecuteScalar();
+            return result != null ? Convert.ToInt32(result) : -1;
+        }
+    }
+
+    public void AddPet(string name, string species, string ownerName)
+    {
+        using (var connection = new SqliteConnection(_connectionstring))
+        {
+            connection.Open();
+            var getOwnerIdCommand = connection.CreateCommand();
+            getOwnerIdCommand.CommandText = @"SELECT id
+                                            FROM Owners
+                                            WHERE name = $OwnerName";
+            getOwnerIdCommand.Parameters.AddWithValue("$OwnerName", ownerName);
+
+            var result = getOwnerIdCommand.ExecuteScalar();
+            int ownerId = Convert.ToInt32(result);
+
             using (var transaction = connection.BeginTransaction())
             {
                 var insertPetCommand = connection.CreateCommand();
                 insertPetCommand.CommandText = @"
-                INSERT INTO Pets (name, species) VALUES ($Name, $Species)";
+                INSERT INTO Pets (name, species, owner_id) VALUES ($Name, $Species, $OwnerId)";
                 insertPetCommand.Parameters.AddWithValue("Name", name);
                 insertPetCommand.Parameters.AddWithValue("Species", species);
+                insertPetCommand.Parameters.AddWithValue("OwnerId", ownerId);
                 insertPetCommand.ExecuteNonQuery();
 
                 transaction.Commit();
             }
         }
+    }
+
+    //Searching for owners phone number by pet name
+
+    public List<PetsOwners> SearchPhoneByPetName(string petName)
+    {
+        var results = new List<PetsOwners>();
+
+        using (var connection = new SqliteConnection(_connectionstring))
+        {
+            connection.Open();
+            
+            var searchPhoneCommand = connection.CreateCommand();
+            searchPhoneCommand.CommandText = @"
+            SELECT Pets.name, Pets.species, Owners.phone 
+            FROM Pets 
+            JOIN Owners ON Owners.id = Pets.owner_id 
+            WHERE Pets.name = @petName ";
+            searchPhoneCommand.Parameters.AddWithValue("@petName", petName);
+            using (var reader = searchPhoneCommand.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    results.Add(new PetsOwners(reader.GetString(0), reader.GetString(1), reader.GetString(2)));
+                }
+            }
+
+        }
+
+        return results;
     }
 
     public List<PetsOwners> GetPetsOwners()
