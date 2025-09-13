@@ -138,6 +138,25 @@ public class PetsAndOwnersDB
         return results;
     }
 
+    public void ChangePhoneNumber(string ownerName, string newPhone)
+    {
+        var results = new List<PetsOwners>();
+        using (var connection = new SqliteConnection(_connectionstring))
+        {
+            connection.Open();
+
+            var changePhoneNumberCommand = connection.CreateCommand();
+            changePhoneNumberCommand.CommandText = @"
+            UPDATE Owners
+            SET phone = @newPhone
+            WHERE name = @ownerName";
+            changePhoneNumberCommand.Parameters.AddWithValue("@newPhone", newPhone);
+            changePhoneNumberCommand.Parameters.AddWithValue("@ownerName", ownerName);
+            changePhoneNumberCommand.ExecuteScalar();
+        }
+
+    }
+
     public List<PetsOwners> GetPetsOwners()
     {
         using (var connection = new SqliteConnection(_connectionstring))

@@ -1,6 +1,7 @@
 ﻿namespace PetsAndOwners;
 
 using System.Data.Common;
+using System.Security.Authentication.ExtendedProtection;
 using Microsoft.Data.Sqlite;
 
 class Program
@@ -51,18 +52,27 @@ class Program
         }
         if (input == "4")
         {
-            Console.WriteLine("Please provide the name of the pet whose owner's phone you would like to find");
-            string? petName = Console.ReadLine();
+            Console.WriteLine("Please provide the name of the owner whose name you would like to change");
+            string? ownerName = Console.ReadLine();
+            Console.WriteLine("Next, provide the new phone number");
+            string? newPhone = Console.ReadLine();
 
-            List<PetsOwners> allpets = petsAndOwnersDB.SearchPhoneByPetName(petName);
-
-            foreach (PetsOwners petsowners in allpets)
-            {
-                Console.WriteLine($"Phone number: {petsowners.phone}");
-            }
+            petsAndOwnersDB.ChangePhoneNumber(ownerName, newPhone); 
         }
-
         if (input == "5")
+            {
+                Console.WriteLine("Please provide the name of the pet whose owner's phone you would like to find");
+                string? petName = Console.ReadLine();
+
+                List<PetsOwners> allpets = petsAndOwnersDB.SearchPhoneByPetName(petName);
+
+                foreach (PetsOwners petsowners in allpets)
+                {
+                    Console.WriteLine($"Phone number: {petsowners.phone}");
+                }
+            }
+
+        if (input == "6")
             {
                 return;
             }
