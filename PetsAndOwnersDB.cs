@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using Microsoft.Data.Sqlite;
 
-public record PetsOwners (string name, string phone);
+public record PetsOwners (string petname, string petspecies, string phone);
 
 public class PetsAndOwnersDB
 {
@@ -33,6 +33,7 @@ public class PetsAndOwnersDB
                 CREATE TABLE IF NOT EXISTS Pets(
                     id INTEGER PRIMARY KEY,
                     name VARCHAR(225),
+                    species VARCHAR(225),
                     owner_id INTEGER,
                     FOREIGN KEY (owner_id) REFERENCES Owners(id)
                     )";
@@ -61,6 +62,25 @@ public class PetsAndOwnersDB
         }
     }
 
+    public void AddPet(string name, string species)
+    {
+        using (var connection = new SqliteConnection(_connectionstring))
+        {
+            connection.Open();
+            using (var transaction = connection.BeginTransaction())
+            {
+                var insertPetCommand = connection.CreateCommand();
+                insertPetCommand.CommandText = @"
+                INSERT INTO Pets (name, species) VALUES ($Name, $Species)";
+                insertPetCommand.Parameters.AddWithValue("Name", name);
+                insertPetCommand.Parameters.AddWithValue("Species", species);
+                insertPetCommand.ExecuteNonQuery();
+
+                transaction.Commit();
+            }
+        }
+    }
+
     public List<PetsOwners> GetPetsOwners()
     {
         using (var connection = new SqliteConnection(_connectionstring))
@@ -68,16 +88,16 @@ public class PetsAndOwnersDB
             connection.Open();
             var selectOwnersCmd = connection.CreateCommand();
             selectOwnersCmd.CommandText = @"
-            SELECT Owners.name, Owners.phone
-            FROM Owners";
+            SELECT Pets.name, Pets.species, Owners.phone
+            FROM Pets, Owners";
             using (var reader = selectOwnersCmd.ExecuteReader())
             {
-                List<PetsOwners> owners = new List<PetsOwners>();
+                List<PetsOwners> petsowners = new List<PetsOwners>();
                 while (reader.Read())
                 {
-                    owners.Add(new PetsOwners(reader.GetString(0), reader.GetString(1)));
+                    petsowners.Add(new PetsOwners(reader.GetString(0), reader.GetString(1), reader.GetString(2)));
                 }
-                return owners;
+                return petsowners;
             }
         }
     }
