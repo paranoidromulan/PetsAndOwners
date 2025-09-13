@@ -1,9 +1,10 @@
 namespace PetsAndOwners;
 
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using Microsoft.Data.Sqlite;
 
-public record PetsOwners ();
+public record PetsOwners (string name, string phone);
 
 public class PetsAndOwnersDB
 {
@@ -35,8 +36,49 @@ public class PetsAndOwnersDB
                     owner_id INTEGER,
                     FOREIGN KEY (owner_id) REFERENCES Owners(id)
                     )";
-            createPetsTableCmd.ExecuteNonQuery();     
-                        
+            createPetsTableCmd.ExecuteNonQuery();
+
+        }
+    }
+
+    public void AddOwner(string name, string phone)
+    {
+        using (var connection = new SqliteConnection(_connectionstring))
+        {
+            connection.Open();
+
+            using (var transaction = connection.BeginTransaction())
+            {
+                var insertOwnerCommand = connection.CreateCommand();
+                insertOwnerCommand.CommandText = @"
+                    INSERT INTO Owners (name, phone) VALUES ($Name, $Phone)";
+                insertOwnerCommand.Parameters.AddWithValue("Name", name);
+                insertOwnerCommand.Parameters.AddWithValue("Phone", phone);
+                insertOwnerCommand.ExecuteNonQuery();
+
+                transaction.Commit();
+            }
+        }
+    }
+
+    public List<PetsOwners> GetPetsOwners()
+    {
+        using (var connection = new SqliteConnection(_connectionstring))
+        {
+            connection.Open();
+            var selectOwnersCmd = connection.CreateCommand();
+            selectOwnersCmd.CommandText = @"
+            SELECT Owners.name, Owners.phone
+            FROM Owners";
+            using (var reader = selectOwnersCmd.ExecuteReader())
+            {
+                List<PetsOwners> owners = new List<PetsOwners>();
+                while (reader.Read())
+                {
+                    owners.Add(new PetsOwners(reader.GetString(0), reader.GetString(1)));
+                }
+                return owners;
+            }
         }
     }
     
