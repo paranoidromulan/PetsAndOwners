@@ -165,7 +165,8 @@ public class PetsAndOwnersDB
             var selectOwnersCmd = connection.CreateCommand();
             selectOwnersCmd.CommandText = @"
             SELECT Pets.name, Pets.species, Owners.phone
-            FROM Pets, Owners";
+            FROM Pets
+            JOIN Owners ON Pets.owner_id = Owners.id";
             using (var reader = selectOwnersCmd.ExecuteReader())
             {
                 List<PetsOwners> petsowners = new List<PetsOwners>();
